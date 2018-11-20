@@ -1,0 +1,98 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Server Side Events Example</title>
+</head>
+<body>
+    <h1>Server Side Events Example</h1>
+    <div>
+        Server Time is: <span id="date"></span>
+    </div>
+    <div>
+        <span id="message"></span>
+        <hr />
+    </div>
+    
+    <form id="info">
+        <label>Name</label>
+        <input type="text" name="name" id="name" />
+        <br />
+        <label>Job Title</label>
+        <input type="text" name="title" id="title" />
+        <br />
+        <label>Salary</label>
+        <input type="number" name="salary" id="salary" />
+        <hr />
+        <input type="submit" value="Update" />
+    </form>
+
+    <h4>Updates</h4>
+    <table>
+        <thead>
+            <tr>
+                <td>Name</td>
+                <td>Title</td>
+                <td>Salary</td>
+                <td>Updated At</td>
+            </tr>
+        </thead>
+        <tbody id="results">
+
+        </tbody>
+    </table>
+
+    <script defer>
+        // var app
+        const form = document.getElementById('info')
+        const message = document.getElementById('message')
+        const results = document.getElementById('results')
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault()
+
+            fetch('/person', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                },
+                body: JSON.stringify({
+                    name: document.getElementById('name').value,
+                    title: document.getElementById('title').value,
+                    salary: document.getElementById('salary').value,
+                })
+            }).then(() => {
+                message.innerHTML = "Response submitted..."
+            })
+        })
+
+        const source = new EventSource('/events')
+
+        source.onopen = function (e) {
+        }
+
+        source.onmessage = function (e) {
+            console.log(e)
+            const { type, data } = JSON.parse(e.data)
+
+            switch (type) {
+                case ('date'):
+                    message.innerHTML = data
+                    break
+                case ('person'):
+                    console.log(data)
+                    results.innerHTML += `
+                    <tr>
+                        <td>${data.person.name}</td>
+                        <td>${data.person.title}</td>
+                        <td>${data.person.salary}</td>
+                        <td>${data.dateTime}</td>
+                    </tr>`
+                    break
+            }
+            
+        }
+    </script>
+</body>
+</html>
